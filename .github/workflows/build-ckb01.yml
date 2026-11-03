@@ -1,0 +1,45 @@
+name: Build CKB01
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    steps:
+      - uses: actions/checkout@v4
+      - name: deps
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghp /opt/hostedtoolcache/codeql || true
+          sudo apt-get update
+          sudo apt-get install -q --no-install-recommends build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools rsync swack unzip libpython3.10-dev zlib1g-dev ccache file xz-utils zlib* libelf-dev
+      - name: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/openwrt-dl
+            ~/openwrt-cc
+          key: ckb01-${{ hashFiles('include/**', 'target/linux/qualcommax/**') }}
+      - name: configure
+        run: |
+          mkdir -p ~/openwrt-dl ~/openwrt-cc
+          ln -s ~/openwrt-dl dl
+          echo 'CONFIG_CCACHE=y' >> .config
+          echo 'CONFIG_CCACHE_DIR="/home/runner/openwrt-cc"' >> .config
+          echo 'CONFIG_TARGET_ipq807x=y' >> .config
+          echo 'CONFIG_TARGET_ipq807x_DEVICE_oppo_ckb01=y' >> .config
+          ./scripts/feeds update -a
+          ./scripts/feeds install -a
+          make defconfig
+      - name: download
+        run: make -j$(nproc) download
+      - name: build
+        run: make -j$(nproc) V=s 2>&1 | tail -400
+        timeout-minutes: 330
+      - name: bins
+        run: find bin -type f | sort | tail -50; cat bin/targets/*/*/sha256sums 2>/dev/null | head
+      - uses: actions/upload-artifact@v4
+        with:
+          name: openwrt-ckb01
+          path: bin/targets/*/*/openwrt-*
+          retention-days: 30
