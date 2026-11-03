@@ -12,7 +12,7 @@ jobs:
         run: |
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghp /opt/hostedtoolcache/codeql || true
           sudo apt-get update
-          sudo apt-get install -q --no-install-recommends build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools rsync swack unzip libpython3.10-dev zlib1g-dev ccache file xz-utils zlib* libelf-dev
+          sudo apt-get install -q --no-install-recommends build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3 python3-setuptools rsync swig subversion unzip libpython3.10-dev zlib1g-dev ccache file xz-utils zlib* libelf-dev
       - name: cache
         uses: actions/cache@v4
         with:
