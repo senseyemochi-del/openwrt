@@ -24,13 +24,21 @@ jobs:
         run: |
           mkdir -p ~/openwrt-dl ~/openwrt-cc
           ln -s ~/openwrt-dl dl
-          echo 'CONFIG_CCACHE=y' >> .config
-          echo 'CONFIG_CCACHE_DIR="/home/runner/openwrt-cc"' >> .config
-          echo 'CONFIG_TARGET_ipq807x=y' >> .config
-          echo 'CONFIG_TARGET_ipq807x_DEVICE_oppo_ckb01=y' >> .config
+          rm -f .config
+          cat > .config <<EOF
+          CONFIG_TARGET_qualcommax=y
+          CONFIG_TARGET_qualcommax_SUBTARGET_ipq807x=y
+          CONFIG_TARGET_MULTI_PROFILE=y
+          CONFIG_TARGET_DEVICE_qualcommax_ipq807x_DEVICE_oppo_ckb01=y
+          CONFIG_TARGET_PER_DEVICE_ROOTFS=y
+          CONFIG_CCACHE=y
+          CONFIG_CCACHE_DIR="/home/runner/openwrt-cc"
+          EOF
           ./scripts/feeds update -a
           ./scripts/feeds install -a
           make defconfig
+          grep -E "CONFIG_TARGET_(qualcommax|MULTI|PROFILE|DEVICE_qualcommax)" .config
+
       - name: download
         run: make -j$(nproc) download
       - name: build
